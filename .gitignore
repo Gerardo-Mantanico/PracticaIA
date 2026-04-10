@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.*
+
+# Next.js build output
+.next/
+out/
+
+# General build output
+build/
+dist/
+
+# Coverage reports
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables (sensitive)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Cache and temporary files
+.cache/
+.tmp/
+tmp/
+temp/
+
+# Local databases and data dumps
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+*.sql
+
+# Local-only data folders
+/data/
+/uploads/
+
+# TypeScript
+*.tsbuildinfo
+
+# Deployment
+.vercel/
+
+# IDE / OS files
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+*~
