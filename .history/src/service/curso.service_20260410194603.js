@@ -77,10 +77,9 @@ const buildCourseUpdatePayload = (payload) => {
   };
 };
 
-const validateCourse = (payload, options) => {
-  const requireCourseCode = options?.requireCourseCode ?? true;
+const validateCourse = (payload, options = { requireCourseCode: true }) => {
   if (!String(payload?.name ?? "").trim()) throw new Error("El nombre es obligatorio");
-  if (requireCourseCode && toNumber(payload?.courseCode, 0) <= 0) {
+  if (options.requireCourseCode && toNumber(payload?.courseCode, 0) <= 0) {
     throw new Error("El código del curso es obligatorio");
   }
   if (toNumber(payload?.defaultCredits ?? payload?.numberOfPeriods, 0) <= 0) {
