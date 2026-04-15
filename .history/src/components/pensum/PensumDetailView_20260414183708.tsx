@@ -224,6 +224,7 @@ const normalizePensumCourseList = (response: unknown): PensumCourseLike[] => {
   return single ? [single] : [];
 };
 
+/* eslint-disable sonarjs/cognitive-complexity */
 export default function PensumDetailView({ pensumId }: Readonly<{ pensumId: number }>) {
   const router = useRouter();
   const params = useParams<{ id?: string | string[] }>();

@@ -30,15 +30,6 @@ type PensumCourseLike = PensumCourse & {
   postrequisites?: unknown[];
 };
 
-type PrerequisiteRelationLike = {
-  id?: number;
-  prerequisiteId?: number;
-  pensumCoursePrerequisiteId?: number;
-  courseCode?: number;
-  prerequisite?: { id?: number; courseCode?: number; name?: string };
-  course?: { id?: number; courseCode?: number; name?: string };
-};
-
 const formatRelatedCourse = (item: unknown): string => {
   if (typeof item === "number" || typeof item === "string") return String(item);
   if (!item || typeof item !== "object") return "N/A";
@@ -53,7 +44,7 @@ const formatRelatedCourse = (item: unknown): string => {
   return "N/A";
 };
 
-const formatPrerequisiteCode = (item: unknown): string => {
+const formatRelatedCourseCode = (item: unknown): string => {
   if (typeof item === "number") return String(item).padStart(4, "0");
   if (typeof item === "string") {
     const parsed = Number(item);
@@ -61,23 +52,9 @@ const formatPrerequisiteCode = (item: unknown): string => {
   }
   if (!item || typeof item !== "object") return "N/A";
 
-  const value = item as { courseCode?: number; prerequisite?: { courseCode?: number }; course?: { courseCode?: number } };
-  const code = Number(value.courseCode ?? value.prerequisite?.courseCode ?? value.course?.courseCode ?? 0);
+  const value = item as { courseCode?: number; course?: { courseCode?: number } };
+  const code = Number(value.courseCode ?? value.course?.courseCode ?? 0);
   return code > 0 ? String(code).padStart(4, "0") : "N/A";
-};
-
-const getPrerequisiteAssignmentId = (item: unknown, prerequisiteCandidates: PensumCourseLike[]): number => {
-  if (!item || typeof item !== "object") return 0;
-
-  const value = item as PrerequisiteRelationLike;
-  const directId = Number(value.prerequisiteId ?? value.pensumCoursePrerequisiteId ?? value.prerequisite?.id ?? value.course?.id ?? 0);
-  if (directId > 0) return directId;
-
-  const courseCode = Number(value.courseCode ?? value.prerequisite?.courseCode ?? value.course?.courseCode ?? 0);
-  if (courseCode <= 0) return 0;
-
-  const candidate = prerequisiteCandidates.find((entry) => Number(entry.courseCode ?? 0) === courseCode);
-  return Number(candidate?.id ?? 0);
 };
 
 const initialCourseForm: PensumCourseFormData = {
@@ -117,50 +94,61 @@ const renderPensumCourseState = (
   return (
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
       {pensumCourses.map((course) => {
-        const courseCode = Number(course.courseCode ?? 0);
-        const name = course.courseName || course.course?.name || courseMap.get(courseCode) || `Curso ${courseCode}`;
-        const credits = Number(course.credits ?? 0);
-        const prereqs = Array.isArray(course.prerequisites) ? course.prerequisites : [];
-        const prereqCodes = prereqs.map(formatPrerequisiteCode).filter((code) => code !== "N/A");
+    const courseCode = Number(course.courseCode ?? 0);
+    const name = course.courseName || course.course?.name || courseMap.get(courseCode) || `Curso ${courseCode}`;
+    const credits = Number(course.credits ?? 0);
+    const prereqs = Array.isArray(course.prerequisites) ? course.prerequisites : [];
+    const postreqs = Array.isArray(course.postrequisites) ? course.postrequisites : [];
+    const prereqCodes = prereqs.map(formatRelatedCourseCode).filter((code) => code !== "N/A");
 
-        return (
-          <button
-            key={course.id || `${courseCode}-${course.semester}`}
-            type="button"
-            onClick={() => onCourseClick(course)}
-            className="w-full rounded-sm border border-blue-300 bg-blue-100/70 text-left transition-colors hover:bg-blue-200/70"
-          >
-            <div className="grid grid-cols-[58px_1fr_58px] overflow-hidden">
-              <div className="grid grid-rows-2 bg-blue-600 text-white">
-                <div className="flex items-center justify-center text-sm font-semibold">{String(courseCode).padStart(4, "0")}</div>
-                <div className="flex items-center justify-center border-t border-blue-300 text-sm font-semibold">{credits}</div>
-              </div>
+    return (
+      <button
+        key={course.id || `${courseCode}-${course.semester}`}
+        type="button"
+        onClick={() => onCourseClick(course)}
+        className="w-full rounded-sm border border-blue-300 bg-blue-100/70 text-left transition-colors hover:bg-blue-200/70"
+      >
+        <div className="grid grid-cols-[58px_1fr_58px] overflow-hidden">
+          <div className="grid grid-rows-2 bg-blue-600 text-white">
+            <div className="flex items-center justify-center text-sm font-semibold">{String(courseCode).padStart(4, "0")}</div>
+            <div className="flex items-center justify-center border-t border-blue-300 text-sm font-semibold">{credits}</div>
+          </div>
 
-              <div className="flex items-center justify-center px-3 py-3 text-center text-sm font-medium text-gray-800">
-                <div>
-                  <p>{name}</p>
-                  <p className="mt-0.5 text-[11px] text-gray-600">
-                    {course.studyAreaName || course.studyArea?.name || studyAreaMap.get(Number(course.studyAreaId)) || "Área no definida"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-center bg-blue-600 px-1 text-white">
-                {prereqCodes.length > 0 ? (
-                  <div className="flex max-h-full flex-col items-center justify-center gap-0.5 overflow-hidden text-center text-[10px] font-semibold leading-tight">
-                    {prereqCodes.map((code, index) => (
-                      <span key={`${code}-${index}`} className="block w-full truncate">
-                        {code}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <span className="text-xl leading-none">•</span>
-                )}
-              </div>
+          <div className="flex items-center justify-center px-3 py-3 text-center text-sm font-medium text-gray-800">
+            <div>
+              <p>{name}</p>
+              <p className="mt-0.5 text-[11px] text-gray-600">
+                {course.studyAreaName || course.studyArea?.name || studyAreaMap.get(Number(course.studyAreaId)) || "Área no definida"}
+              </p>
             </div>
-          </button>
-        );
+          </div>
+
+          <div className="flex items-center justify-center bg-blue-600 px-1 text-white">
+            {prereqCodes.length > 0 ? (
+              <div className="flex max-h-full flex-col items-center justify-center gap-0.5 overflow-hidden text-center text-[10px] font-semibold leading-tight">
+                {prereqCodes.map((code, index) => (
+                  <span key={`${code}-${index}`} className="block w-full truncate">
+                    {code}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span className="text-xl leading-none">•</span>
+            )}
+          </div>
+        </div>
+
+        {(prereqs.length > 0 || postreqs.length > 0) && (
+          <div className="grid gap-1 border-t border-blue-300 bg-white/70 px-3 py-2 text-[11px] text-gray-700">
+            {prereqs.length > 0 && (
+              <p>
+                <span className="font-semibold">Prerequisitos:</span> {prereqs.map(formatRelatedCourse).join(", ")}
+              </p>
+            )}
+          </div>
+        )}
+      </button>
+    );
       })}
     </div>
   );
@@ -289,10 +277,6 @@ export default function PensumDetailView({ pensumId }: Readonly<{ pensumId: numb
     return pensumCourses.filter((course) => Number(course.id ?? 0) > 0 && Number(course.id ?? 0) !== selectedId);
   }, [pensumCourses, selectedCourseAssignment]);
 
-  const prerequisiteAssignments = useMemo(() => {
-    return Array.isArray(selectedCourseAssignment?.prerequisites) ? selectedCourseAssignment.prerequisites : [];
-  }, [selectedCourseAssignment]);
-
   const openCourseDetailModal = (course: PensumCourseLike) => {
     setSelectedCourseAssignment(course);
     setCourseDetailModalError(null);
@@ -316,7 +300,6 @@ export default function PensumDetailView({ pensumId }: Readonly<{ pensumId: numb
     setIsEditingCourseInModal(false);
     setShowAddPrerequisiteForm(false);
     setNewPrerequisiteId(0);
-    setSavingPrerequisite(false);
     setCourseDetailModalError(null);
   }, []);
 
@@ -481,22 +464,21 @@ export default function PensumDetailView({ pensumId }: Readonly<{ pensumId: numb
     const prerequisiteId = Number(newPrerequisiteId ?? 0);
 
     if (pensumCourseId <= 0) {
-      setCourseDetailModalError("No se encontró la asignación de curso seleccionada");
+      toast.error("No se encontró la asignación de curso seleccionada");
       return;
     }
 
     if (prerequisiteId <= 0) {
-      setCourseDetailModalError("Debes seleccionar un prerequisite válido");
+      toast.error("Debes seleccionar un prerequisite válido");
       return;
     }
 
     if (prerequisiteId === pensumCourseId) {
-      setCourseDetailModalError("El curso no puede ser prerequisito de sí mismo");
+      toast.error("El curso no puede ser prerequisito de sí mismo");
       return;
     }
 
     setSavingPrerequisite(true);
-    setCourseDetailModalError(null);
 
     try {
       await api.post("/pensum-course-prerequisite", {
@@ -513,35 +495,9 @@ export default function PensumDetailView({ pensumId }: Readonly<{ pensumId: numb
       const updatedAssignment = items.find((item) => item.id === pensumCourseId) ?? null;
       setSelectedCourseAssignment(updatedAssignment);
     } catch (err) {
-      setCourseDetailModalError(err instanceof Error ? err.message : "No fue posible agregar el prerequisite");
+      toast.error(err instanceof Error ? err.message : "No fue posible agregar el prerequisite");
     } finally {
       setSavingPrerequisite(false);
-    }
-  };
-
-  const handleDeletePrerequisite = async (item: unknown) => {
-    const pensumCourseId = Number(selectedCourseAssignment?.id ?? 0);
-    const prerequisiteId = getPrerequisiteAssignmentId(item, prerequisiteCandidates);
-
-    if (pensumCourseId <= 0 || prerequisiteId <= 0) {
-      setCourseDetailModalError("No se pudo resolver la relación del prerequisite");
-      return;
-    }
-
-    const confirmed = globalThis.confirm("¿Eliminar este prerequisite?");
-    if (!confirmed) return;
-
-    try {
-      setCourseDetailModalError(null);
-      await api.delete(`/pensum-course-prerequisite?pensumCourseId=${pensumCourseId}&prerequisiteId=${prerequisiteId}`);
-
-      const items = await refreshPensumCourses();
-      setPensumCourses(items);
-      const updatedAssignment = items.find((entry) => entry.id === pensumCourseId) ?? null;
-      setSelectedCourseAssignment(updatedAssignment);
-      toast.success("Prerequisito eliminado con éxito");
-    } catch (err) {
-      setCourseDetailModalError(err instanceof Error ? err.message : "No fue posible eliminar el prerequisite");
     }
   };
 
@@ -719,6 +675,7 @@ export default function PensumDetailView({ pensumId }: Readonly<{ pensumId: numb
                       aria-label="Editar curso"
                       onClick={() => {
                         setCourseDetailModalError(null);
+                        setShowAddPrerequisiteForm(false);
                         setIsEditingCourseInModal(true);
                       }}
                       className="p-2 text-gray-500 transition-colors rounded-lg hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-900/20 dark:hover:text-brand-400"
@@ -780,112 +737,70 @@ export default function PensumDetailView({ pensumId }: Readonly<{ pensumId: numb
                       </p>
                     </div>
 
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Prerequisitos</p>
-                      {prerequisiteAssignments.length > 0 ? (
-                        <div className="mt-2 space-y-2">
-                          {prerequisiteAssignments.map((item, index) => {
-                            const prerequisiteCode = formatPrerequisiteCode(item);
-                            const displayValue = formatRelatedCourse(item);
-
-                            return (
-                              <div
-                                key={`${prerequisiteCode}-${index}`}
-                                className="flex items-start justify-between gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-900/60"
-                              >
-                                <div>
-                                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{prerequisiteCode}</p>
-                                  <p className="text-sm text-gray-700 dark:text-gray-300">{displayValue}</p>
-                                </div>
-                                <button
-                                  type="button"
-                                  className="rounded-lg px-2 py-1 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
-                                  onClick={() => handleDeletePrerequisite(item)}
-                                  title="Eliminar prerequisite"
-                                  aria-label={`Eliminar prerequisite ${prerequisiteCode}`}
-                                >
-                                  Eliminar
-                                </button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-gray-700 dark:text-gray-300">No tiene prerequisitos.</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Postrequisitos</p>
-                      {Array.isArray(selectedCourseAssignment.postrequisites) && selectedCourseAssignment.postrequisites.length > 0 ? (
-                        <p className="text-sm text-gray-700 dark:text-gray-300">
-                          {selectedCourseAssignment.postrequisites.map(formatRelatedCourse).join(", ")}
-                        </p>
-                      ) : (
-                        <p className="text-sm text-gray-700 dark:text-gray-300">No tiene postrequisitos.</p>
-                      )}
-                    </div>
-
-                    <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900/60">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Agregar prerequisite</p>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setCourseDetailModalError(null);
-                            setShowAddPrerequisiteForm((prev) => !prev);
-                            if (showAddPrerequisiteForm) setNewPrerequisiteId(0);
-                          }}
-                        >
-                          {showAddPrerequisiteForm ? "Ocultar" : "Agregar"}
-                        </Button>
+                    {Array.isArray(selectedCourseAssignment.prerequisites) && selectedCourseAssignment.prerequisites.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Prerequisitos</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">{selectedCourseAssignment.prerequisites.map(formatRelatedCourse).join(", ")}</p>
                       </div>
+                    )}
 
-                      {showAddPrerequisiteForm && (
-                        <form className="mt-3 grid grid-cols-1 gap-3" onSubmit={handleCreateCoursePrerequisite}>
-                          <div>
-                            <Label>Seleccione un prerequisite</Label>
-                            <select
-                              className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
-                              value={newPrerequisiteId > 0 ? String(newPrerequisiteId) : ""}
-                              onChange={(event) => setNewPrerequisiteId(Number(event.target.value || 0))}
-                            >
-                              <option value="">Seleccione una asignación</option>
-                              {prerequisiteCandidates.map((candidate) => {
-                                const candidateId = Number(candidate.id ?? 0);
-                                const courseCode = Number(candidate.courseCode ?? 0);
-                                const label = candidate.courseName || candidate.course?.name || courseMap.get(courseCode) || "Curso sin nombre";
+                    {Array.isArray(selectedCourseAssignment.postrequisites) && selectedCourseAssignment.postrequisites.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Postrequisitos</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">{selectedCourseAssignment.postrequisites.map(formatRelatedCourse).join(", ")}</p>
+                      </div>
+                    )}
 
-                                return (
-                                  <option key={candidateId} value={String(candidateId)}>
-                                    #{candidateId} - {String(courseCode).padStart(4, "0")} - {label}
-                                  </option>
-                                );
-                              })}
-                            </select>
-                          </div>
-
-                          <div className="flex justify-end gap-3">
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setShowAddPrerequisiteForm(false);
-                                setNewPrerequisiteId(0);
-                              }}
-                            >
-                              Cancelar
-                            </Button>
-                            <Button type="submit" size="sm" disabled={savingPrerequisite}>
-                              {savingPrerequisite ? "Guardando..." : "Agregar prerequisite"}
-                            </Button>
-                          </div>
-                        </form>
-                      )}
+                    <div className="pt-1">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setShowAddPrerequisiteForm((prev) => !prev);
+                          if (showAddPrerequisiteForm) {
+                            setNewPrerequisiteId(0);
+                          }
+                        }}
+                      >
+                        {showAddPrerequisiteForm ? "Ocultar" : "Agregar course-prerequisite"}
+                      </Button>
                     </div>
+
+                    {showAddPrerequisiteForm && (
+                      <form className="grid grid-cols-1 gap-3 rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900/60" onSubmit={handleCreateCoursePrerequisite}>
+                        <div>
+                          <Label>Prerequisite (asignación de curso del pensum)</Label>
+                          <select
+                            className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+                            value={newPrerequisiteId > 0 ? String(newPrerequisiteId) : ""}
+                            onChange={(event) => setNewPrerequisiteId(Number(event.target.value || 0))}
+                          >
+                            <option value="">Seleccione una asignación</option>
+                            {prerequisiteCandidates.map((candidate) => {
+                              const candidateId = Number(candidate.id ?? 0);
+                              const courseCode = Number(candidate.courseCode ?? 0);
+                              const label = candidate.courseName || candidate.course?.name || courseMap.get(courseCode) || "Curso sin nombre";
+
+                              return (
+                                <option key={candidateId} value={String(candidateId)}>
+                                  #{candidateId} - {String(courseCode).padStart(4, "0")} - {label}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+
+                        <div className="flex justify-end gap-3">
+                          <Button type="button" size="sm" variant="outline" onClick={() => setShowAddPrerequisiteForm(false)}>
+                            Cancelar
+                          </Button>
+                          <Button type="submit" size="sm" disabled={savingPrerequisite}>
+                            {savingPrerequisite ? "Guardando..." : "Guardar prerequisite"}
+                          </Button>
+                        </div>
+                      </form>
+                    )}
                   </div>
                 )}
 

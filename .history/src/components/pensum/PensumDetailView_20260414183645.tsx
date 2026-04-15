@@ -533,7 +533,10 @@ export default function PensumDetailView({ pensumId }: Readonly<{ pensumId: numb
 
     try {
       setCourseDetailModalError(null);
-      await api.delete(`/pensum-course-prerequisite?pensumCourseId=${pensumCourseId}&prerequisiteId=${prerequisiteId}`);
+      await api.delete("/pensum-course-prerequisite", {
+        pensumCourseId,
+        prerequisiteId,
+      });
 
       const items = await refreshPensumCourses();
       setPensumCourses(items);

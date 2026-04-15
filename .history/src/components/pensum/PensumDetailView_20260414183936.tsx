@@ -121,7 +121,7 @@ const renderPensumCourseState = (
         const name = course.courseName || course.course?.name || courseMap.get(courseCode) || `Curso ${courseCode}`;
         const credits = Number(course.credits ?? 0);
         const prereqs = Array.isArray(course.prerequisites) ? course.prerequisites : [];
-        const prereqCodes = prereqs.map(formatPrerequisiteCode).filter((code) => code !== "N/A");
+        const prereqLabels = prereqs.map(formatRelatedCourse).filter((value) => value !== "N/A");
 
         return (
           <button
@@ -146,11 +146,11 @@ const renderPensumCourseState = (
               </div>
 
               <div className="flex items-center justify-center bg-blue-600 px-1 text-white">
-                {prereqCodes.length > 0 ? (
+                {prereqLabels.length > 0 ? (
                   <div className="flex max-h-full flex-col items-center justify-center gap-0.5 overflow-hidden text-center text-[10px] font-semibold leading-tight">
-                    {prereqCodes.map((code, index) => (
-                      <span key={`${code}-${index}`} className="block w-full truncate">
-                        {code}
+                    {prereqLabels.map((label, index) => (
+                      <span key={`${label}-${index}`} className="block w-full truncate">
+                        {label}
                       </span>
                     ))}
                   </div>

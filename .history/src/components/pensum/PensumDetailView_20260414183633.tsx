@@ -533,7 +533,10 @@ export default function PensumDetailView({ pensumId }: Readonly<{ pensumId: numb
 
     try {
       setCourseDetailModalError(null);
-      await api.delete(`/pensum-course-prerequisite?pensumCourseId=${pensumCourseId}&prerequisiteId=${prerequisiteId}`);
+      await api.delete("/pensum-course-prerequisite", {
+        pensumCourseId,
+        prerequisiteId,
+      });
 
       const items = await refreshPensumCourses();
       setPensumCourses(items);
@@ -782,34 +785,10 @@ export default function PensumDetailView({ pensumId }: Readonly<{ pensumId: numb
 
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Prerequisitos</p>
-                      {prerequisiteAssignments.length > 0 ? (
-                        <div className="mt-2 space-y-2">
-                          {prerequisiteAssignments.map((item, index) => {
-                            const prerequisiteCode = formatPrerequisiteCode(item);
-                            const displayValue = formatRelatedCourse(item);
-
-                            return (
-                              <div
-                                key={`${prerequisiteCode}-${index}`}
-                                className="flex items-start justify-between gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2 dark:border-gray-700 dark:bg-gray-900/60"
-                              >
-                                <div>
-                                  <p className="text-sm font-semibold text-gray-900 dark:text-white">{prerequisiteCode}</p>
-                                  <p className="text-sm text-gray-700 dark:text-gray-300">{displayValue}</p>
-                                </div>
-                                <button
-                                  type="button"
-                                  className="rounded-lg px-2 py-1 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
-                                  onClick={() => handleDeletePrerequisite(item)}
-                                  title="Eliminar prerequisite"
-                                  aria-label={`Eliminar prerequisite ${prerequisiteCode}`}
-                                >
-                                  Eliminar
-                                </button>
-                              </div>
-                            );
-                          })}
-                        </div>
+                      {Array.isArray(selectedCourseAssignment.prerequisites) && selectedCourseAssignment.prerequisites.length > 0 ? (
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
+                          {selectedCourseAssignment.prerequisites.map(formatRelatedCourse).join(", ")}
+                        </p>
                       ) : (
                         <p className="text-sm text-gray-700 dark:text-gray-300">No tiene prerequisitos.</p>
                       )}
@@ -823,67 +802,6 @@ export default function PensumDetailView({ pensumId }: Readonly<{ pensumId: numb
                         </p>
                       ) : (
                         <p className="text-sm text-gray-700 dark:text-gray-300">No tiene postrequisitos.</p>
-                      )}
-                    </div>
-
-                    <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900/60">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Agregar prerequisite</p>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setCourseDetailModalError(null);
-                            setShowAddPrerequisiteForm((prev) => !prev);
-                            if (showAddPrerequisiteForm) setNewPrerequisiteId(0);
-                          }}
-                        >
-                          {showAddPrerequisiteForm ? "Ocultar" : "Agregar"}
-                        </Button>
-                      </div>
-
-                      {showAddPrerequisiteForm && (
-                        <form className="mt-3 grid grid-cols-1 gap-3" onSubmit={handleCreateCoursePrerequisite}>
-                          <div>
-                            <Label>Seleccione un prerequisite</Label>
-                            <select
-                              className="h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
-                              value={newPrerequisiteId > 0 ? String(newPrerequisiteId) : ""}
-                              onChange={(event) => setNewPrerequisiteId(Number(event.target.value || 0))}
-                            >
-                              <option value="">Seleccione una asignación</option>
-                              {prerequisiteCandidates.map((candidate) => {
-                                const candidateId = Number(candidate.id ?? 0);
-                                const courseCode = Number(candidate.courseCode ?? 0);
-                                const label = candidate.courseName || candidate.course?.name || courseMap.get(courseCode) || "Curso sin nombre";
-
-                                return (
-                                  <option key={candidateId} value={String(candidateId)}>
-                                    #{candidateId} - {String(courseCode).padStart(4, "0")} - {label}
-                                  </option>
-                                );
-                              })}
-                            </select>
-                          </div>
-
-                          <div className="flex justify-end gap-3">
-                            <Button
-                              type="button"
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setShowAddPrerequisiteForm(false);
-                                setNewPrerequisiteId(0);
-                              }}
-                            >
-                              Cancelar
-                            </Button>
-                            <Button type="submit" size="sm" disabled={savingPrerequisite}>
-                              {savingPrerequisite ? "Guardando..." : "Agregar prerequisite"}
-                            </Button>
-                          </div>
-                        </form>
                       )}
                     </div>
                   </div>
