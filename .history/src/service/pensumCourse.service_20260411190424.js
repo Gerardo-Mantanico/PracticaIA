@@ -86,7 +86,7 @@ export const pensumCourseApi = {
   get: async (id) => {
     return requestWithFallback(async (endpoint) => {
       const api = createCrudService(endpoint);
-      const response = await api.getAll({ pensumId: id });
+      const response = await api.get(id);
       return normalizeCollection(response);
     });
   },

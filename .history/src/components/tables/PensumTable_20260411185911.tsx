@@ -11,7 +11,6 @@ import {
 import { useModal } from "@/hooks/useModal";
 import { usePensum, type Pensum } from "@/hooks/usePensum";
 import { useCareer } from "@/hooks/useCareer";
-import { pensumCourseApi } from "@/service/pensumCourse.service";
 import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
 import Input from "@/components/form/input/InputField";
@@ -23,9 +22,6 @@ type PensumFormData = {
   careerId: string;
 };
 
-const resolvePensumId = (value: { id?: number; pensumId?: number; pensumCode?: number }) =>
-  Number(value.id ?? value.pensumId ?? value.pensumCode ?? 0);
-
 const resolveCareerId = (value: { careerId?: number; career?: { careerId?: number; id?: number; careerCode?: number } }) =>
   Number(value.careerId ?? value.career?.careerId ?? value.career?.id ?? value.career?.careerCode ?? 0);
 
@@ -36,6 +32,31 @@ const initialPensumForm: PensumFormData = {
   name: "",
   creditsNeeded: 0,
   careerId: "",
+};
+
+const COURSE_LIST_SECTIONS = [
+  {
+    title: "Vigente para estudiantes con pensum CLAR a partir del año 2022",
+    text: "Esta vista reproduce una referencia institucional para que el usuario reconozca de inmediato la estructura académica.",
+  },
+  {
+    title: "Ingeniería en Ciencias y Sistemas",
+    text: "Centro orientado al análisis, diseño, construcción y puesta en marcha de soluciones con enfoque en tecnologías de la información.",
+  },
+  {
+    title: "Créditos CLAR",
+    text: "La carrera se organiza por áreas académicas y por semestres, con una estructura que facilita revisar la carga de cursos.",
+  },
+];
+
+const normalizePensumCourseList = (response: unknown): PensumCourseLike[] => {
+  if (Array.isArray(response)) return response as PensumCourseLike[];
+  if (!response || typeof response !== "object") return [];
+
+  const typedResponse = response as { content?: unknown[]; data?: unknown[]; items?: unknown[]; rows?: unknown[]; results?: unknown[] };
+  const candidate = typedResponse.content ?? typedResponse.data ?? typedResponse.items ?? typedResponse.rows ?? typedResponse.results;
+
+  return Array.isArray(candidate) ? (candidate as PensumCourseLike[]) : [];
 };
 
 export default function PensumTable() {
@@ -92,23 +113,7 @@ export default function PensumTable() {
   };
 
   const handleOpenDetail = (pensum: Pensum) => {
-    const pensumId = resolvePensumId(pensum);
-    if (!Number.isFinite(pensumId) || pensumId <= 0) {
-      toast.error("No se pudo resolver el ID del pensum");
-      return;
-    }
-
-    console.info("[PensumTable] Ver pensum click", {
-      pensum,
-      resolvedPensumId: pensumId,
-    });
-
-    // Dispara el flujo esperado al hacer clic en el ojo: GET /pensum-course/{pensumId}
-    void pensumCourseApi.get(pensumId).catch(() => {
-      // La carga oficial se realiza en la vista de detalle.
-    });
-
-    router.push(`/admin/pensum/${pensumId}`);
+    router.push(`/admin/pensum/${pensum.id}`);
   };
 
   const handleCloseModal = () => {
@@ -143,8 +148,7 @@ export default function PensumTable() {
       payload.careerId = resolvedCareerId;
     }
 
-    const selectedPensumId = selectedPensum ? resolvePensumId(selectedPensum) : 0;
-    const success = selectedPensum ? await updatePensum(selectedPensumId, payload) : await createPensum(payload);
+    const success = selectedPensum ? await updatePensum(selectedPensum.id, payload) : await createPensum(payload);
 
     if (success) {
       toast.success(`Pensum ${selectedPensum ? "actualizado" : "creado"} con exito`);
@@ -208,7 +212,7 @@ export default function PensumTable() {
 
             return (
               <article
-                key={resolvePensumId(pensum)}
+                key={pensum.id}
                 className="group overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-theme-sm transition hover:-translate-y-1 hover:shadow-theme-md dark:border-gray-800 dark:bg-white/3"
               >
                 <div className="border-b border-gray-100 bg-linear-to-br from-brand-50 to-white p-5 dark:border-gray-800 dark:from-brand-500/15 dark:to-gray-900">
@@ -261,7 +265,7 @@ export default function PensumTable() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleDeletePensum(resolvePensumId(pensum))}
+                      onClick={() => handleDeletePensum(pensum.id)}
                       title="Eliminar pensum"
                       className="p-2 text-gray-500 transition-colors rounded-lg hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
                     >
@@ -327,7 +331,7 @@ export default function PensumTable() {
             )}
 
             <div className="flex justify-end gap-3">
-              <Button size="sm" type="button" variant="outline" onClick={handleCloseModal}>
+              <Button size="sm" type="button" variant="outline" onClick={closeModal}>
                 Cancelar
               </Button>
               <Button size="sm" type="submit">

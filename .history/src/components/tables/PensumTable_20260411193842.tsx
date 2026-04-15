@@ -98,11 +98,6 @@ export default function PensumTable() {
       return;
     }
 
-    console.info("[PensumTable] Ver pensum click", {
-      pensum,
-      resolvedPensumId: pensumId,
-    });
-
     // Dispara el flujo esperado al hacer clic en el ojo: GET /pensum-course/{pensumId}
     void pensumCourseApi.get(pensumId).catch(() => {
       // La carga oficial se realiza en la vista de detalle.

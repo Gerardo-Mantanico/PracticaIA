@@ -11,7 +11,6 @@ import {
 import { useModal } from "@/hooks/useModal";
 import { usePensum, type Pensum } from "@/hooks/usePensum";
 import { useCareer } from "@/hooks/useCareer";
-import { pensumCourseApi } from "@/service/pensumCourse.service";
 import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
 import Input from "@/components/form/input/InputField";
@@ -97,17 +96,6 @@ export default function PensumTable() {
       toast.error("No se pudo resolver el ID del pensum");
       return;
     }
-
-    console.info("[PensumTable] Ver pensum click", {
-      pensum,
-      resolvedPensumId: pensumId,
-    });
-
-    // Dispara el flujo esperado al hacer clic en el ojo: GET /pensum-course/{pensumId}
-    void pensumCourseApi.get(pensumId).catch(() => {
-      // La carga oficial se realiza en la vista de detalle.
-    });
-
     router.push(`/admin/pensum/${pensumId}`);
   };
 
