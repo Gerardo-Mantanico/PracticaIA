@@ -13,6 +13,7 @@ import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
+import PensumCoursesBoard from "@/components/pensum/PensumCoursesBoard";
 
 type PensumCourseFormData = {
   courseCode: number;
@@ -92,79 +93,15 @@ const initialCourseForm: PensumCourseFormData = {
 const SEMESTER_OPTIONS = [
   { value: 1, label: "Primer semestre" },
   { value: 2, label: "Segundo semestre" },
+  { value: 3, label: "Tercer semestre" },
+  { value: 4, label: "Cuarto semestre" },
+  { value: 5, label: "Quinto semestre" },
+  { value: 6, label: "Sexto semestre" },
+  { value: 7, label: "Séptimo semestre" },
+  { value: 8, label: "Octavo semestre" },
+  { value: 9, label: "Noveno semestre" },
+  { value: 10, label: "Décimo semestre" },
 ] as const;
-
-const renderPensumCourseState = (
-  loadingPensumCourses: boolean,
-  pensumCourseError: string | null,
-  pensumCourses: PensumCourseLike[],
-  courseMap: Map<number, string>,
-  studyAreaMap: Map<number, string>,
-  onCourseClick: (course: PensumCourseLike) => void,
-) => {
-  if (loadingPensumCourses) {
-    return <div className="rounded-2xl bg-white p-4 text-sm text-gray-500 shadow-theme-xs dark:bg-gray-900">Cargando cursos...</div>;
-  }
-
-  if (pensumCourseError) {
-    return <div className="rounded-2xl bg-red-50 p-4 text-sm text-red-600 dark:bg-red-900/10 dark:text-red-400">{pensumCourseError}</div>;
-  }
-
-  if (pensumCourses.length === 0) {
-    return <div className="rounded-2xl bg-white p-4 text-sm text-gray-500 shadow-theme-xs dark:bg-gray-900">Este pensum aún no tiene cursos asociados.</div>;
-  }
-
-  return (
-    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-      {pensumCourses.map((course) => {
-        const courseCode = Number(course.courseCode ?? 0);
-        const name = course.courseName || course.course?.name || courseMap.get(courseCode) || `Curso ${courseCode}`;
-        const credits = Number(course.credits ?? 0);
-        const prereqs = Array.isArray(course.prerequisites) ? course.prerequisites : [];
-        const prereqCodes = prereqs.map(formatPrerequisiteCode).filter((code) => code !== "N/A");
-
-        return (
-          <button
-            key={course.id || `${courseCode}-${course.semester}`}
-            type="button"
-            onClick={() => onCourseClick(course)}
-            className="w-full rounded-sm border border-blue-300 bg-blue-100/70 text-left transition-colors hover:bg-blue-200/70"
-          >
-            <div className="grid grid-cols-[58px_1fr_58px] overflow-hidden">
-              <div className="grid grid-rows-2 bg-blue-600 text-white">
-                <div className="flex items-center justify-center text-sm font-semibold">{String(courseCode).padStart(4, "0")}</div>
-                <div className="flex items-center justify-center border-t border-blue-300 text-sm font-semibold">{credits}</div>
-              </div>
-
-              <div className="flex items-center justify-center px-3 py-3 text-center text-sm font-medium text-gray-800">
-                <div>
-                  <p>{name}</p>
-                  <p className="mt-0.5 text-[11px] text-gray-600">
-                    {course.studyAreaName || course.studyArea?.name || studyAreaMap.get(Number(course.studyAreaId)) || "Área no definida"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-center bg-blue-600 px-1 text-white">
-                {prereqCodes.length > 0 ? (
-                  <div className="flex max-h-full flex-col items-center justify-center gap-0.5 overflow-hidden text-center text-[10px] font-semibold leading-tight">
-                    {prereqCodes.map((code, index) => (
-                      <span key={`${code}-${index}`} className="block w-full truncate">
-                        {code}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <span className="text-xl leading-none">•</span>
-                )}
-              </div>
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  );
-};
 
 const normalizePensumCourseItem = (item: unknown): PensumCourseLike | null => {
   if (!item || typeof item !== "object") return null;
@@ -243,7 +180,6 @@ export default function PensumDetailView({ pensumId }: Readonly<{ pensumId: numb
   const [selectedCourseAssignment, setSelectedCourseAssignment] = useState<PensumCourseLike | null>(null);
   const [courseFormData, setCourseFormData] = useState<PensumCourseFormData>(initialCourseForm);
   const [editCourseFormData, setEditCourseFormData] = useState<PensumCourseFormData>(initialCourseForm);
-  const [courseSearchTerm, setCourseSearchTerm] = useState("");
 
   const resolvedPensumId = useMemo(() => {
     const fromProp = Number(pensumId);
@@ -270,17 +206,6 @@ export default function PensumDetailView({ pensumId }: Readonly<{ pensumId: numb
     });
     return map;
   }, [especialidades]);
-
-  const filteredPensumCourses = useMemo(() => {
-    const normalized = courseSearchTerm.trim().toLowerCase();
-    if (!normalized) return pensumCourses;
-
-    return pensumCourses.filter((course) => {
-      const courseCode = Number(course.courseCode ?? 0);
-      const courseName = course.courseName || course.course?.name || courseMap.get(courseCode) || "";
-      return courseName.toLowerCase().includes(normalized);
-    });
-  }, [pensumCourses, courseSearchTerm, courseMap]);
 
   const prerequisiteCandidates = useMemo(() => {
     const selectedId = Number(selectedCourseAssignment?.id ?? 0);
@@ -576,22 +501,18 @@ export default function PensumDetailView({ pensumId }: Readonly<{ pensumId: numb
               </div>
               <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Los datos se cargan desde el endpoint del pensum seleccionado.</p>
 
-              <div className="mt-4">
-                <Input
-                  value={courseSearchTerm}
-                  onChange={(event) => setCourseSearchTerm(event.target.value)}
-                  placeholder="Buscar curso por nombre"
-                />
-              </div>
-
               <div className="mt-4 space-y-3">
-                {courseSearchTerm.trim() && filteredPensumCourses.length === 0 && pensumCourses.length > 0 ? (
-                  <div className="rounded-2xl bg-white p-4 text-sm text-gray-500 shadow-theme-xs dark:bg-gray-900">
-                    No se encontraron cursos con ese nombre.
-                  </div>
-                ) : (
-                  renderPensumCourseState(loadingPensumCourses, pensumCourseError, filteredPensumCourses, courseMap, studyAreaMap, openCourseDetailModal)
-                )}
+                <PensumCoursesBoard
+                  loading={loadingPensumCourses}
+                  error={pensumCourseError}
+                  pensumCourses={pensumCourses}
+                  courseMap={courseMap}
+                  studyAreaMap={studyAreaMap}
+                  onCourseClick={openCourseDetailModal}
+                  searchPlaceholder="Buscar curso por nombre"
+                  emptyMessage="Este pensum aún no tiene cursos asociados."
+                  noResultsMessage="No se encontraron cursos con ese nombre."
+                />
               </div>
          
 

@@ -4,7 +4,7 @@ import { useSidebar } from "@/context/SidebarContext";
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { FileIcon, TableIcon, TimeIcon, UserCircleIcon } from "@/icons";
+import { FileIcon, ListIcon, TableIcon, TimeIcon, UserCircleIcon } from "@/icons";
 import { usePathname } from "next/navigation";
 
 type NavItem = {
@@ -28,6 +28,11 @@ const navItems: NavItem[] = [
     name: "Cursos",
     icon: <FileIcon />,
     path: "/student/cursos",
+  },
+  {
+    name: "Mis pensums",
+    icon: <ListIcon />,
+    path: "/student/pensums",
   },
   {
     name: "Perfil",
