@@ -151,7 +151,7 @@ export default function PensumCoursesBoard({
     return cellMap;
   }, [filteredPensumCourses]);
 
-  const semesterLabelMap = useMemo(() => new Map(SEMESTER_OPTIONS.map((option) => [option.value, option.label])), []);
+  const semesterLabelMap = useMemo(() => new Map(SEMESTER_OPTIONS.map((option: {readonly value: number, readonly label: string}) => [option.value, option.label])), []);
   const gridTemplateColumns = `minmax(220px, 220px) repeat(${Math.max(semesterValues.length, 1)}, minmax(260px, 1fr))`;
 
   return (
@@ -212,6 +212,7 @@ export default function PensumCoursesBoard({
                             const prereqs = Array.isArray(course.prerequisites) ? course.prerequisites : [];
                             const prereqCodes = prereqs.map(formatPrerequisiteCode).filter((code) => code !== "N/A");
                             const status = statusByCourseId?.get(Number(course.id ?? 0)) || "available";
+                            const requiredCreds = Number(course.requiredCreds ?? 0);
 
                             const content = (
                               <>
@@ -247,13 +248,18 @@ export default function PensumCoursesBoard({
                                   </div>
 
                                   <div className={`flex items-center justify-center px-1 text-white ${status === "approved" ? "bg-green-600" : status === "blocked" ? "bg-gray-500" : "bg-blue-600"}`}>
-                                    {prereqCodes.length > 0 ? (
+                                    {prereqCodes.length > 0 || requiredCreds > 0 ? (
                                       <div className="flex max-h-full flex-col items-center justify-center gap-0.5 overflow-hidden text-center text-[10px] font-semibold leading-tight">
                                         {prereqCodes.map((code, index) => (
                                           <span key={`${code}-${index}`} className="block w-full truncate">
                                             {code}
                                           </span>
                                         ))}
+                                        {requiredCreds > 0 && (
+                                          <span className="block w-full truncate">
+                                            {requiredCreds}Cr.
+                                          </span>
+                                        )}
                                       </div>
                                     ) : (
                                       <span className="text-xl leading-none">•</span>
