@@ -167,7 +167,7 @@ const mixOptions: ApexOptions = {
     position: "bottom",
     horizontalAlign: "center",
     fontSize: "13px",
-    markers: { width: 10, height: 10, radius: 999 },
+    markers: { size: 10, shape: "circle" },
   },
   stroke: {
     width: 0,

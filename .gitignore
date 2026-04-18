@@ -56,5 +56,6 @@ temp/
 .DS_Store
 Thumbs.db
 .idea/
+.history/
 *.swp
 *~
