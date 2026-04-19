@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useCrud } from "./useCrud";
 import pensumCourseApi from "@/service/pensumCourse.service";
 
@@ -45,11 +46,19 @@ export const usePensumCourse = () => {
     deleteItem: deletePensumCourse,
   } = useCrud<PensumCourse>(pensumCourseApi, transformPayload);
 
+  const fetchByPensumId = useCallback(
+    async (pensumId: number) => {
+      return fetchPensumCourses({ pensumId });
+    },
+    [fetchPensumCourses],
+  );
+
   return {
     pensumCourses,
     loading,
     error,
     fetchPensumCourses,
+    fetchByPensumId,
     createPensumCourse,
     updatePensumCourse,
     deletePensumCourse,

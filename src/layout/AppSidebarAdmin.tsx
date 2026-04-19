@@ -109,6 +109,11 @@ const navItems: NavItem[] = [
     name: "Agregar notas",
     path: "/admin/notas",
   },
+  {
+    icon: <ListIcon />,
+    name: "Estudiante-Pensum",
+    path: "/admin/student-pensum",
+  },
 ];
 
 const AppSidebarAdmin: React.FC = () => {

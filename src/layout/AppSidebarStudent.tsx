@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { FileIcon, ListIcon, TableIcon, TimeIcon, UserCircleIcon } from "@/icons";
 import { usePathname } from "next/navigation";
+import { MdGrades } from "react-icons/md";
 
 type NavItem = {
   name: string;
@@ -28,6 +29,11 @@ const navItems: NavItem[] = [
     name: "Cursos",
     icon: <FileIcon />,
     path: "/student/cursos",
+  },
+  {
+    name: "Calificaciones",
+    icon: <MdGrades className="h-5 w-5" />,
+    path: "/student/student-grades",
   },
   {
     name: "Mis pensums",

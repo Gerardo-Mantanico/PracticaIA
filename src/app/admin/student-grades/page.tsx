@@ -1,10 +1,10 @@
 import StudentGradeContent from "@/components/admin/StudentGradeContent";
 
 export const metadata = {
-  title: "Agregar notas",
+  title: "Calificaciones de Estudiantes",
   description: "Gestiona las calificaciones de los estudiantes",
 };
 
-export default function NotasPage() {
+export default function StudentGradesPage() {
   return <StudentGradeContent />;
 }

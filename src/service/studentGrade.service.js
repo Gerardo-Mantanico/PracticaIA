@@ -65,6 +65,64 @@ const normalizeCollection = (response) => {
 };
 
 export const studentGradeApi = {
+  getAll: async (params = {}) => {
+    return requestWithFallback(async (endpoint) => {
+      const response = await api.get(endpoint, { params });
+      return normalizeCollection(response);
+    });
+  },
+
+  get: async (id) => {
+    const normalizedId = toNumber(id, 0);
+    return requestWithFallback(async (endpoint) => {
+      const response = await api.get(`${endpoint}/${normalizedId}`);
+      return normalizeStudentGrade(response);
+    });
+  },
+
+  create: async (data) => {
+    const payload = {
+      studentPensumId: toNumber(data.studentPensumId ?? 0, 0),
+      pensumCourseId: toNumber(data.pensumCourseId ?? 0, 0),
+      isApproved: Boolean(data.isApproved ?? false),
+      gradeType: String(data.gradeType ?? "").trim(),
+      grade: toNumber(data.grade ?? 0, 0),
+    };
+
+    return requestWithFallback(async (endpoint) => {
+      const response = await api.post(endpoint, payload);
+      return normalizeStudentGrade(response);
+    });
+  },
+
+  update: async (id, data) => {
+    const normalizedId = toNumber(id, 0);
+    const payload = {
+      isApproved: Boolean(data.isApproved ?? false),
+      gradeType: String(data.gradeType ?? "").trim(),
+      grade: toNumber(data.grade ?? 0, 0),
+    };
+
+    return requestWithFallback(async (endpoint) => {
+      const response = await api.patch(`${endpoint}/${normalizedId}`, payload);
+      return normalizeStudentGrade(response);
+    });
+  },
+
+  delete: async (id) => {
+    const normalizedId = toNumber(id, 0);
+    return requestWithFallback(async (endpoint) => {
+      return await api.delete(`${endpoint}/${normalizedId}`);
+    });
+  },
+
+  getGradeTypes: async () => {
+    return requestWithFallback(async (endpoint) => {
+      const response = await api.get(`${endpoint}/grade-types`);
+      return Array.isArray(response) ? response : [];
+    });
+  },
+
   getApprovedByPensum: async (pensumId) => {
     const normalizedPensumId = toNumber(pensumId, 0);
     return requestWithFallback(async (endpoint) => {

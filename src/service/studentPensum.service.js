@@ -49,6 +49,12 @@ const normalizeStudentPensum = (item) => {
       creditsNeeded: toNumber(item.pensum?.creditsNeeded ?? item.creditsNeeded, 0),
       careerId: toNumber(item.pensum?.careerId ?? 0, 0),
     },
+    student: {
+      ...(item.student ?? {}),
+      studentId: toNumber(item.studentId ?? item.student?.studentId, 0),
+      firstname: String(item.student?.firstname ?? ""),
+      lastname: String(item.student?.lastname ?? ""),
+    },
   };
 };
 
@@ -70,6 +76,48 @@ export const studentPensumApi = {
     return requestWithFallback(async (endpoint) => {
       const response = await api.get(endpoint, { params });
       return normalizeCollection(response);
+    });
+  },
+
+  get: async (id) => {
+    const normalizedId = toNumber(id, 0);
+    return requestWithFallback(async (endpoint) => {
+      const response = await api.get(`${endpoint}/${normalizedId}`);
+      return normalizeStudentPensum(response);
+    });
+  },
+
+  create: async (data) => {
+    const payload = {
+      studentId: toNumber(data.studentId, 0),
+      pensumId: toNumber(data.pensumId, 0),
+    };
+    return requestWithFallback(async (endpoint) => {
+      const response = await api.post(endpoint, payload);
+      return normalizeStudentPensum(response);
+    });
+  },
+
+  delete: async (id) => {
+    const normalizedId = toNumber(id, 0);
+    return requestWithFallback(async (endpoint) => {
+      return await api.delete(`${endpoint}/${normalizedId}`);
+    });
+  },
+
+  joinPensum: async (pensumId, studentId) => {
+    const nPensumId = toNumber(pensumId, 0);
+    const payload = { studentId: toNumber(studentId, 0) };
+    return requestWithFallback(async (endpoint) => {
+      const response = await api.post(`${endpoint}/join/${nPensumId}`, payload);
+      return normalizeStudentPensum(response);
+    });
+  },
+
+  getAssignableCourses: async (params = {}) => {
+    return requestWithFallback(async (endpoint) => {
+      const response = await api.get(`${endpoint}/assignable-courses`, { params });
+      return Array.isArray(response) ? response : [];
     });
   },
 };

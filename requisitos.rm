@@ -1,0 +1,35 @@
+
+Necesito que integres una nueva vista (pantalla) para manejar un CRUD basado en los siguientes endpoints de mi API.
+
+Swagger:
+https://my-schedule-cuno2-edhzcghfgxgufxay.centralus-01.azurewebsites.net/api-docs#/
+
+Módulo: student-pensum
+
+Endpoints disponibles:
+- POST /student-pensum → crear registro
+- GET /student-pensum → listar registros
+- GET /student-pensum/{id} → obtener por id
+- DELETE /student-pensum/{id} → eliminar
+- POST /student-pensum/join/{pensumId} → registrar estudiante en pensum
+- GET /student-pensum/assignable-courses → cursos asignables
+
+REQUISITOS:
+1. NO crees un proyecto nuevo, solo agrega una vista/componente al proyecto existente.
+2. Usa la arquitectura ya existente (respeta estructura de carpetas, servicios, etc).
+3. Si ya existen servicios HTTP (ej: axios, fetch wrapper, apiService), reutilízalos.
+4. Si no existen, crea un servicio simple para consumir la API.
+5. La vista debe incluir:
+   - Tabla para listar registros (GET)
+   - Botón para eliminar (DELETE)
+   - Formulario para crear registro (POST)
+   - Acción para obtener por ID
+6. Usa buenas prácticas (separar lógica, componentes limpios).
+7. Maneja estados básicos:
+   - loading
+   - error
+8. No uses librerías innecesarias.
+
+
+=
+
