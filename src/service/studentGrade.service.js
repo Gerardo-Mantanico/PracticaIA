@@ -77,6 +77,17 @@ export const studentGradeApi = {
       return normalizeCollection(response);
     });
   },
+  getByPensum: async (pensumId) => {
+    const normalizedPensumId = toNumber(pensumId, 0);
+    return requestWithFallback(async (endpoint) => {
+      const response = await api.get(endpoint, {
+        params: {
+          pensumId: normalizedPensumId,
+        },
+      });
+      return normalizeCollection(response);
+    });
+  },
 };
 
 export default studentGradeApi;

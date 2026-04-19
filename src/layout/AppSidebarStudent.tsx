@@ -34,11 +34,11 @@ const navItems: NavItem[] = [
     icon: <ListIcon />,
     path: "/student/pensums",
   },
-  {
-    name: "Perfil",
-    icon: <UserCircleIcon />,
-    path: "/student/profile",
-  },
+  // {
+  //   name: "Perfil",
+  //   icon: <UserCircleIcon />,
+  //   path: "/student/profile",
+  // },
 ];
 
 const AppSidebarStudent: React.FC = () => {

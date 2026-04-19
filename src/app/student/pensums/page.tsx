@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import RoleGate from "@/components/auth/RoleGate";
 import Input from "@/components/form/input/InputField";
-import { EyeIcon } from "@/icons";
+import { EyeIcon, PieChartIcon } from "@/icons";
 import { studentPensumApi } from "@/service/studentPensum.service";
 
 type StudentPensumItem = {
@@ -130,7 +130,15 @@ export default function StudentPensumsPage() {
                       <p className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{creditsNeeded}</p>
                     </div>
 
-                    <div className="flex justify-end">
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/student/pensums/reports/${pensumId}`)}
+                        title="Ver reporte"
+                        className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400"
+                      >
+                        <PieChartIcon className="h-5 w-5" />
+                      </button>
                       <button
                         type="button"
                         onClick={() => router.push(`/student/pensums/${pensumId}`)}
