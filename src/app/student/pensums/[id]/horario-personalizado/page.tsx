@@ -18,6 +18,7 @@ type AssignableCourseItem = {
   courseCode?: number;
   credits?: number;
   semester?: number;
+  isMandatory?: boolean;
   course?: {
     courseCode?: number;
     name?: string;
@@ -139,7 +140,9 @@ export default function PersonalizedSchedulePage() {
         setStudentPensumId(parsePositiveNumber(normalizedAssignable.studentPensumId));
         setAssignableCourses(normalizedAssignable.assignableCourses ?? []);
         setSelectedCourseCodeToAdd("");
-        setSelectedCourses([]);
+
+        const mandatoryCourses = normalizedAssignable.assignableCourses?.filter((course) => course.isMandatory) ?? [];
+        setSelectedCourses(mandatoryCourses);
       } catch (err) {
         if (!isMounted) return;
         setError(err instanceof Error ? err.message : "No se pudieron cargar los datos para crear el horario personalizado");
@@ -332,9 +335,11 @@ export default function PersonalizedSchedulePage() {
                       const courseCode = parsePositiveNumber(course.courseCode ?? course.course?.courseCode);
                       const courseName = course.course?.name ?? `Curso ${courseCode}`;
                       const credits = parsePositiveNumber(course.credits);
+                      const semester = course.semester ?? 0;
+                      const type = course.isMandatory ? "Obligatorio" : "Opcional"
                       return (
                         <option key={`${courseCode}-${course.pensumCourseId ?? "x"}`} value={String(courseCode)}>
-                          {courseCode} - {courseName} ({credits} créditos)
+                          {courseCode} - {courseName} ({credits} créditos, Semestre {semester}, {type})
                         </option>
                       );
                     })}
@@ -364,7 +369,7 @@ export default function PersonalizedSchedulePage() {
                         <li key={`selected-${courseCode}`} className="flex items-center justify-between gap-2 p-3">
                           <div>
                             <p className="text-sm font-medium text-gray-900 dark:text-white">{courseCode} - {courseName}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">Semestre {parsePositiveNumber(course.semester)} · {parsePositiveNumber(course.credits)} créditos</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Semestre {parsePositiveNumber(course.semester)} · {parsePositiveNumber(course.credits)} créditos · {course.isMandatory ? "Obligatorio" : "Opcional"}</p>
                           </div>
                           <button
                             type="button"

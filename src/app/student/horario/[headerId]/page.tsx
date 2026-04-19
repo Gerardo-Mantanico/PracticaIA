@@ -98,6 +98,18 @@ const isItemStartingAtSlot = (item: ScheduleItem, slotIndex: number): boolean =>
   return toNumber(item.startSlot) === slotIndex;
 };
 
+const dayLabelsByIndex: Record<number, string[]> = {
+  0: ["Lunes", "Miércoles", "Viernes"],
+  1: ["Martes"],
+  2: ["Jueves"],
+};
+
+const toCsvValue = (value: string | number | boolean | null | undefined): string => {
+  const raw = value == null ? "" : String(value);
+  const escaped = raw.replace(/"/g, '""');
+  return `"${escaped}"`;
+};
+
 export default function StudentGeneratedSchedulePage() {
   const router = useRouter();
   const params = useParams<{ headerId?: string | string[] }>();
@@ -179,6 +191,185 @@ export default function StudentGeneratedSchedulePage() {
     return items.filter((item) => dayIndexGroup.includes(toNumber(item.dayIndex)) && isItemInSlot(item, slotIndex));
   };
 
+  const slotLabelByIndex = useMemo(() => {
+    const map = new Map<number, string>();
+    slots.forEach((slot) => {
+      const index = toNumber(slot.slotIndex);
+      if (!Number.isFinite(index)) return;
+      map.set(index, buildSlotLabel(slot));
+    });
+    return map;
+  }, [slots]);
+
+  const handleExportCsv = () => {
+    if (!selectedSchedule || items.length === 0) return;
+
+    const headerRow = [
+      "Dia",
+      "Hora",
+      "Curso",
+      "Codigo",
+      "Seccion",
+      "Tipo",
+      "Profesor",
+      "Salon",
+      "Obligatorio",
+    ];
+
+    const rows: string[] = [];
+    rows.push(headerRow.map(toCsvValue).join(","));
+
+    items.forEach((item) => {
+      const dayIndex = toNumber(item.dayIndex);
+      const dayLabels = dayLabelsByIndex[dayIndex] ?? ["-"];
+      const slotLabel = slotLabelByIndex.get(toNumber(item.startSlot)) ?? "-";
+      const courseName = item.courseName ?? "Curso";
+      const courseCode = toPositive(item.courseCode) || "-";
+
+      dayLabels.forEach((dayLabel) => {
+        const row = [
+          dayLabel,
+          slotLabel,
+          courseName,
+          courseCode,
+          toNumber(item.sectionIndex) || "-",
+          item.sessionType ?? "-",
+          item.professorName ?? "-",
+          item.classroomName ?? "-",
+          item.isMandatory ? "Si" : "No",
+        ];
+        rows.push(row.map(toCsvValue).join(","));
+      });
+    });
+
+    const csvContent = rows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const scheduleId = toPositive(selectedSchedule.studentGeneratedScheduleId) || "horario";
+    link.href = url;
+    link.download = `horario-${scheduleId}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportPdf = async () => {
+    if (!selectedSchedule || items.length === 0) return;
+    if (typeof window === "undefined") return;
+
+    const { jsPDF } = await import("jspdf/dist/jspdf.es.min.js");
+
+    const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+    const scheduleId = toPositive(selectedSchedule.studentGeneratedScheduleId) || "-";
+
+    doc.setFontSize(14);
+    doc.setFontSize(10);
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const marginX = 10;
+    const marginY = 12;
+    const headerHeight = 20;
+    const startY = marginY + headerHeight;
+    const tableWidth = pageWidth - marginX * 2;
+    const timeColWidth = 26;
+    const dayColWidth = (tableWidth - timeColWidth) / dayColumns.length;
+    const lineHeight = 4.2;
+    const cellPadding = 2.5;
+
+    let currentY = startY;
+
+    const drawHeaderRow = () => {
+      doc.setFontSize(9);
+      doc.setFillColor(245, 245, 245);
+      doc.rect(marginX, currentY, tableWidth, 8, "F");
+      doc.rect(marginX, currentY, tableWidth, 8);
+      doc.text("Hora", marginX + cellPadding, currentY + 5.5);
+
+      dayColumns.forEach((day, index) => {
+        const x = marginX + timeColWidth + dayColWidth * index;
+        doc.rect(x, currentY, dayColWidth, 8);
+        doc.text(day.label, x + cellPadding, currentY + 5.5);
+      });
+
+      currentY += 8;
+    };
+
+    const ensureSpace = (rowHeight: number) => {
+      if (currentY + rowHeight + marginY > pageHeight) {
+        doc.addPage();
+        currentY = marginY;
+        drawHeaderRow();
+      }
+    };
+
+    drawHeaderRow();
+
+    slots.forEach((slot) => {
+      const slotIndex = toNumber(slot.slotIndex);
+      const slotLabel = buildSlotLabel(slot);
+
+      const rowCells = dayColumns.map((day) => {
+        const inCellItems = getCellItemsForDayAndSlot(day.dayIndexes, slotIndex);
+        const startItems = inCellItems.filter((item) => isItemStartingAtSlot(item, slotIndex));
+        const hasContinuingOnly = inCellItems.length > 0 && startItems.length === 0;
+
+        if (startItems.length === 0) {
+          return hasContinuingOnly ? ["Continuacion"] : [""];
+        }
+
+        return startItems.flatMap((item) => {
+          const courseCode = toPositive(item.courseCode) || "-";
+          const courseName = item.courseName ?? "Curso";
+          const sessionType = item.sessionType ?? "-";
+          const section = toNumber(item.sectionIndex) || "-";
+          const periodCount = Math.max(1, toNumber(item.periodCount));
+          const mandatory = item.isMandatory ? "Obligatorio: Si" : "Obligatorio: No";
+          return [
+            `${courseName} (${courseCode})`,
+            `${sessionType} · Seccion ${section} · ${periodCount} bloque(s)`,
+            item.classroomName ? `Salon: ${item.classroomName}` : "Salon: -",
+            item.professorName ? `Docente: ${item.professorName}` : "Docente: -",
+            mandatory,
+            "",
+          ];
+        });
+      });
+
+      const rowHeights = rowCells.map((cellLines, index) => {
+        const x = marginX + timeColWidth + dayColWidth * index;
+        const maxWidth = dayColWidth - cellPadding * 2;
+        const splitLines = cellLines.flatMap((line) => doc.splitTextToSize(line, maxWidth));
+        return splitLines.length;
+      });
+      const maxLines = Math.max(1, ...rowHeights);
+      const rowHeight = maxLines * lineHeight + cellPadding * 2;
+
+      ensureSpace(rowHeight);
+
+      doc.setDrawColor(220, 220, 220);
+      doc.rect(marginX, currentY, timeColWidth, rowHeight);
+      doc.text(slotLabel, marginX + cellPadding, currentY + cellPadding + lineHeight);
+
+      dayColumns.forEach((day, index) => {
+        const x = marginX + timeColWidth + dayColWidth * index;
+        const maxWidth = dayColWidth - cellPadding * 2;
+        doc.rect(x, currentY, dayColWidth, rowHeight);
+
+        const cellLines = rowCells[index].flatMap((line) => doc.splitTextToSize(line, maxWidth));
+        cellLines.forEach((line, lineIndex) => {
+          doc.text(line, x + cellPadding, currentY + cellPadding + lineHeight * (lineIndex + 1));
+        });
+      });
+
+      currentY += rowHeight;
+    });
+
+    doc.save(`horario-${scheduleId}.pdf`);
+  };
+
   return (
     <RoleGate allowedRoles={["STUDENT", "ESTUDIANTE", "ROLE_STUDENT"]}>
       <div className="space-y-6">
@@ -255,7 +446,27 @@ export default function StudentGeneratedSchedulePage() {
             </section>
 
             <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-white/5 dark:bg-white/3">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tabla de horario</h2>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Tabla de horario</h2>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleExportCsv}
+                    disabled={!selectedSchedule || items.length === 0}
+                    className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+                  >
+                    Exportar CSV
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleExportPdf}
+                    disabled={!selectedSchedule || items.length === 0}
+                    className="rounded-lg bg-brand-600 px-3 py-2 text-xs font-medium text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Exportar PDF
+                  </button>
+                </div>
+              </div>
               {!selectedSchedule ? (
                 <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">Selecciona un horario para ver la tabla.</p>
               ) : slots.length === 0 ? (
