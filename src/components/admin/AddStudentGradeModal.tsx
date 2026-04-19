@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import GenericModal from "@/components/ui/modal/GenericModal";
+import { GenericModal } from "@/components/ui/modal/GenericModal";
 import Button from "@/components/ui/button/Button";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
@@ -106,12 +106,66 @@ export function AddStudentGradeModal({
     }
   };
 
+  // Definir opciones para los selects
+  const gradeTypeOptions = gradeTypes.map((type) => ({
+    value: type.id,
+    label: type.description,
+  }));
+
+  const studentOptions = students.map((student) => ({
+    value: String(student.studentId),
+    label: `${student.firstname} ${student.lastname} - ${student.studentId}`,
+  }));
+
+  const studentPensumOptions = studentPensums.map((item) => ({
+    value: String(item.studentPensumId),
+    label: `${item.pensum?.name || "Pensum"} (ID ${item.studentPensumId})`,
+  }));
+
+  const courseOptions = assignableCourses.map((course) => {
+    const courseId = Number(course.pensumCourseId ?? course.id ?? 0);
+    const label =
+      String(course.name ?? "").trim() ||
+      String(course.courseName ?? "").trim() ||
+      String(course.course?.name ?? "").trim() ||
+      `Curso ${courseId}`;
+
+    return {
+      value: String(courseId),
+      label,
+    };
+  });
+
   useEffect(() => {
     if (!isOpen) return;
     if (!Number.isFinite(Number(initialStudentId)) || Number(initialStudentId) <= 0) return;
 
     void handleSelectStudent(String(initialStudentId));
   }, [isOpen, initialStudentId]);
+
+  // Auto-seleccionar pensum si solo hay uno
+  useEffect(() => {
+    if (studentPensums.length === 1 && formData.studentPensumId === 0) {
+      const onlyPensum = studentPensums[0];
+      void handleSelectStudentPensum(String(onlyPensum.studentPensumId));
+    }
+  }, [studentPensums]);
+
+  // Auto-seleccionar curso si solo hay uno
+  useEffect(() => {
+    if (courseOptions.length === 1 && formData.pensumCourseId === 0) {
+      const onlyCourse = courseOptions[0];
+      handleChange("pensumCourseId", Number(onlyCourse.value));
+    }
+  }, [courseOptions, formData.pensumCourseId]);
+
+  // Auto-seleccionar tipo de calificación si solo hay uno
+  useEffect(() => {
+    if (gradeTypeOptions.length === 1 && !formData.gradeType) {
+      const onlyGradeType = gradeTypeOptions[0];
+      handleChange("gradeType", onlyGradeType.value);
+    }
+  }, [gradeTypeOptions, formData.gradeType]);
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -162,34 +216,6 @@ export function AddStudentGradeModal({
       setIsSubmitting(false);
     }
   };
-
-  const gradeTypeOptions = gradeTypes.map((type) => ({
-    value: type.id,
-    label: type.description,
-  }));
-
-  const studentOptions = students.map((student) => ({
-    value: String(student.studentId),
-    label: `${student.firstname} ${student.lastname} - ${student.studentId}`,
-  }));
-
-  const studentPensumOptions = studentPensums.map((item) => ({
-    value: String(item.studentPensumId),
-    label: `${item.pensum?.name || "Pensum"} (ID ${item.studentPensumId})`,
-  }));
-
-  const courseOptions = assignableCourses.map((course) => {
-    const courseId = Number(course.pensumCourseId ?? course.id ?? 0);
-    const label =
-      String(course.name ?? "").trim() ||
-      String(course.courseName ?? "").trim() ||
-      `Curso ${courseId}`;
-
-    return {
-      value: String(courseId),
-      label,
-    };
-  });
 
   const coursePlaceholder = (() => {
     if (studentPensumLoading) return "Cargando cursos...";

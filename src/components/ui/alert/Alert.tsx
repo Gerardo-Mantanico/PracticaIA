@@ -3,8 +3,9 @@ import React, { useEffect } from "react";
 
 interface AlertProps {
   variant: "success" | "error" | "warning" | "info"; // Alert type
-  title: string; // Title of the alert
-  message: string; // Message of the alert
+  title?: string; // Title of the alert
+  message?: string; // Message of the alert
+  children?: React.ReactNode; // Content as children (alternative to message)
   showLink?: boolean; // Whether to show the "Learn More" link
   linkHref?: string; // Link URL
   linkText?: string; // Link text
@@ -20,6 +21,7 @@ const Alert: React.FC<AlertProps> = ({
   variant,
   title,
   message,
+  children,
   showLink = false,
   linkHref = "#",
   linkText = "Learn more",
@@ -134,9 +136,11 @@ const Alert: React.FC<AlertProps> = ({
         <div className={`-mt-0.5 ${variantClasses[variant].icon}`}>{icons[variant]}</div>
 
         <div className="flex-1">
-          <h4 className="mb-1 text-sm font-semibold text-gray-800 dark:text-white/90">{title}</h4>
+          {title && <h4 className="mb-1 text-sm font-semibold text-gray-800 dark:text-white/90">{title}</h4>}
 
-          <p className="text-sm text-gray-500 dark:text-gray-400">{message}</p>
+          {message && <p className="text-sm text-gray-500 dark:text-gray-400">{message}</p>}
+          
+          {children && !message && <p className="text-sm text-gray-500 dark:text-gray-400">{children}</p>}
 
           {showLink && (
             <Link

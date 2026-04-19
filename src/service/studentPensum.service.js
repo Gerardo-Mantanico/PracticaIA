@@ -117,7 +117,20 @@ export const studentPensumApi = {
   getAssignableCourses: async (params = {}) => {
     return requestWithFallback(async (endpoint) => {
       const response = await api.get(`${endpoint}/assignable-courses`, { params });
-      return Array.isArray(response) ? response : [];
+      
+      // La respuesta tiene estructura: { assignableCourses: [...] }
+      if (response && Array.isArray(response.assignableCourses)) {
+        return response.assignableCourses.map((course) => ({
+          ...course,
+          id: course.pensumCourseId,
+          name: course.course?.name || course.courseName || "",
+        }));
+      }
+      
+      // Fallback: si viene como array directo
+      if (Array.isArray(response)) return response;
+      
+      return [];
     });
   },
 };

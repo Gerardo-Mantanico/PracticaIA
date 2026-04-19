@@ -47,6 +47,13 @@ const normalizeStudentGrade = (item) => {
       pensumCourseId,
       credits: toNumber(item.pensumCourse?.credits ?? 0, 0),
       requiredCreds: toNumber(item.pensumCourse?.requiredCreds ?? 0, 0),
+      // Obtener nombre del curso de diferentes fuentes posibles
+      name: String(
+        item.pensumCourse?.course?.name ||
+        item.pensumCourse?.name ||
+        item.course?.name ||
+        ""
+      ).trim(),
     },
   };
 };
@@ -144,6 +151,29 @@ export const studentGradeApi = {
         },
       });
       return normalizeCollection(response);
+    });
+  },
+
+  getByStudentId: async (studentId) => {
+    const normalizedStudentId = toNumber(studentId, 0);
+    if (normalizedStudentId <= 0) return [];
+    
+    return requestWithFallback(async (endpoint) => {
+      const response = await api.get(`${endpoint}/${normalizedStudentId}`);
+      
+      // Si es un array directo, normalizar cada elemento
+      if (Array.isArray(response)) {
+        return response.map(normalizeStudentGrade);
+      }
+      
+      // Si es un objeto con una estructura con array de notas
+      if (response && typeof response === 'object') {
+        // Asumiendo que el endpoint retorna un array de calificaciones
+        const result = response;
+        return normalizeStudentGrade(result);
+      }
+      
+      return [];
     });
   },
 };

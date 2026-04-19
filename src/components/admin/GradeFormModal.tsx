@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import GenericModal from "@/components/ui/modal/GenericModal";
+import { GenericModal } from "@/components/ui/modal/GenericModal";
 import Button from "@/components/ui/button/Button";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";

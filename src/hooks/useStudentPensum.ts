@@ -24,10 +24,17 @@ export interface StudentPensum {
 
 export interface AssignableCourse {
   id: number;
+  pensumCourseId?: number;
   name?: string;
   courseName?: string;
   pensumId?: number;
   credits?: number;
+  courseCode?: number;
+  course?: {
+    courseCode?: number;
+    name?: string;
+    defaultCredits?: number;
+  };
   [key: string]: unknown;
 }
 

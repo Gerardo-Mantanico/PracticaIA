@@ -16,16 +16,38 @@ export interface StudentGrade {
   isApproved: boolean;
   gradeType: string;
   grade: number;
+  createdAt?: string;
   studentPensum?: {
     studentPensumId?: number;
+    studentId?: number;
+    pensumId?: number;
     firstname?: string;
     lastname?: string;
+    student?: {
+      studentId?: number;
+      firstname?: string;
+      lastname?: string;
+      entryDate?: string;
+    };
+    pensum?: {
+      pensumId?: number;
+      name?: string;
+      creditsNeeded?: number;
+      careerId?: number;
+    };
   };
   pensumCourse?: {
     pensumCourseId: number;
+    pensumId?: number;
+    courseCode?: number;
     credits: number;
     requiredCreds: number;
     name?: string;
+    course?: {
+      courseCode?: number;
+      name?: string;
+      defaultCredits?: number;
+    };
     [key: string]: unknown;
   };
   [key: string]: unknown;
@@ -111,6 +133,34 @@ export const useStudentGrade = () => {
     [fetchStudentGrades]
   );
 
+  // Cargar notas por ID de estudiante usando el endpoint directo
+  const fetchByStudentId = useCallback(async (studentId: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await studentGradeApi.getByStudentId(studentId);
+      
+      // Manejar si retorna un objeto singular o un array
+      if (Array.isArray(response)) {
+        setStudentGrades(response as StudentGrade[]);
+        return response;
+      } else if (response && typeof response === 'object') {
+        // Si retorna un objeto singular, convertir a array
+        setStudentGrades([response as StudentGrade]);
+        return [response as StudentGrade];
+      }
+      
+      return [];
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Error al cargar notas del estudiante";
+      setError(errorMessage);
+      console.error("Error fetching student grades by student id:", err);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Crear nueva calificación
   const createStudentGrade = useCallback(
     async (data: StudentGradeCreatePayload) => {
@@ -185,6 +235,7 @@ export const useStudentGrade = () => {
     error,
     fetchStudentGrades,
     fetchByStudentAndPensum,
+    fetchByStudentId,
     createStudentGrade,
     updateStudentGrade,
     deleteStudentGrade,

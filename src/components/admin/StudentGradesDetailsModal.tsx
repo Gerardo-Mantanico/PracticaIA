@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { MdEdit, MdDelete, MdCheckCircle } from "react-icons/md";
-import GenericModal from "@/components/ui/modal/GenericModal";
+import { GenericModal } from "@/components/ui/modal/GenericModal";
 import Button from "@/components/ui/button/Button";
 import Alert from "@/components/ui/alert/Alert";
 import InputField from "@/components/form/input/InputField";
@@ -22,7 +22,7 @@ export default function StudentGradesDetailsModal({
   onClose,
   studentId,
 }: StudentGradesDetailsModalProps) {
-  const { studentGrades, gradeTypes, loading, error, fetchByStudentAndPensum, updateStudentGrade, deleteStudentGrade } = useStudentGrade();
+  const { studentGrades, gradeTypes, loading, error, fetchByStudentId, updateStudentGrade, deleteStudentGrade } = useStudentGrade();
   const { students } = useStudent();
 
   const [selectedGrade, setSelectedGrade] = useState<StudentGrade | null>(null);
@@ -46,10 +46,10 @@ export default function StudentGradesDetailsModal({
       setIsEditing(false);
       setIsDeleting(false);
       setSelectedGrade(null);
-      // Cargar notas para todos los pensums del estudiante
-      fetchByStudentAndPensum(studentId, 0);
+      // Cargar notas del estudiante usando el endpoint directo
+      void fetchByStudentId(studentId);
     }
-  }, [isOpen, studentId]);
+  }, [isOpen, studentId, fetchByStudentId]);
 
   const handleEditClick = (grade: StudentGrade) => {
     setSelectedGrade(grade);

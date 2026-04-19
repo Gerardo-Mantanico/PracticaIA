@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useStudentGrade, StudentGrade, StudentGradeUpdatePayload } from "@/hooks/useStudentGrade";
 import { useModal } from "@/hooks/useModal";
-import GenericTable from "@/components/ui/table/GenericTable";
-import GenericModal from "@/components/ui/modal/GenericModal";
+import { GenericTable } from "@/components/ui/table/GenericTable";
+import { GenericModal } from "@/components/ui/modal/GenericModal";
 import Button from "@/components/ui/button/Button";
 import { MdEdit, MdDelete, MdCheckCircle } from "react-icons/md";
 import Alert from "@/components/ui/alert/Alert";

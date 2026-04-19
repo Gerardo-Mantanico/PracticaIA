@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { toast } from "react-hot-toast";
-import GenericModal from "@/components/ui/modal/GenericModal";
+import { GenericModal } from "@/components/ui/modal/GenericModal";
 import Button from "@/components/ui/button/Button";
 import Label from "@/components/form/Label";
 import Select from "@/components/form/Select";
