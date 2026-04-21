@@ -155,7 +155,7 @@ export default function PensumCoursesBoard({
   const gridTemplateColumns = `minmax(220px, 220px) repeat(${Math.max(semesterValues.length, 1)}, minmax(260px, 1fr))`;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 overflow-x-hidden">
       <Input
         value={searchTerm}
         onChange={(event) => setSearchTerm(event.target.value)}
@@ -216,7 +216,7 @@ export default function PensumCoursesBoard({
 
                             const content = (
                               <>
-                                <div className="grid grid-cols-[58px_1fr_58px] overflow-hidden">
+                                <div className="grid grid-cols-[58px_1fr_58px] items-start">
                                   <div className={`grid grid-rows-2 text-white ${status === "approved" ? "bg-green-600" : status === "blocked" ? "bg-gray-500" : "bg-blue-600"}`}>
                                     <div className="flex items-center justify-center text-sm font-semibold">{String(courseCode).padStart(4, "0")}</div>
                                     <div className={`flex items-center justify-center border-t text-sm font-semibold ${status === "approved" ? "border-green-300" : status === "blocked" ? "border-gray-300" : "border-blue-300"}`}>
@@ -224,9 +224,17 @@ export default function PensumCoursesBoard({
                                     </div>
                                   </div>
 
-                                  <div className="flex items-center justify-center px-3 py-3 text-center text-sm font-medium text-gray-800 dark:text-gray-100">
-                                    <div>
-                                      <p>{name}</p>
+                                  <div className="flex items-start justify-center px-3 py-3 text-center text-sm font-medium text-gray-800 dark:text-gray-100">
+                                    <div className="min-w-0">
+                                      <p className="flex flex-wrap items-center justify-center gap-1 whitespace-normal break-words">
+                                        <span>{name}</span>
+                                        {course.isMandatory ? (
+                                          <span
+                                            title="Obligatorio"
+                                            className="inline-block h-2 w-2 rounded-full bg-red-500"
+                                          />
+                                        ) : null}
+                                      </p>
                                       <p className="mt-0.5 text-[11px] text-gray-600 dark:text-gray-400">
                                         {course.studyAreaName
                                           || course.studyArea?.name
@@ -262,7 +270,7 @@ export default function PensumCoursesBoard({
                                         )}
                                       </div>
                                     ) : (
-                                      <span className="text-xl leading-none">•</span>
+                                      <span className="text-xl leading-none"> - </span>
                                     )}
                                   </div>
                                 </div>

@@ -44,9 +44,14 @@ const formatRelatedCourse = (item: unknown): string => {
   if (typeof item === "number" || typeof item === "string") return String(item);
   if (!item || typeof item !== "object") return "N/A";
 
-  const value = item as { courseCode?: number; name?: string; course?: { courseCode?: number; name?: string } };
-  const code = Number(value.courseCode ?? value.course?.courseCode ?? 0);
-  const name = value.name ?? value.course?.name ?? "";
+    const value = item as {
+        courseCode?: number;
+        name?: string;
+        pensumCourse?: { course?: { courseCode?: number; name?: string } }
+        prerequisite?: { course?: { courseCode?: number; name?: string } }
+    };
+  const code = Number(value.courseCode ?? value.prerequisite?.course?.courseCode ?? value.pensumCourse?.course?.courseCode ?? 0);
+  const name = value.name ?? value.prerequisite?.course?.name ?? value.pensumCourse?.course?.name ?? "";
 
   if (code > 0 && name) return `${String(code).padStart(4, "0")} - ${name}`;
   if (code > 0) return String(code).padStart(4, "0");
@@ -514,7 +519,7 @@ export default function PensumDetailView({ pensumId }: Readonly<{ pensumId: numb
                   noResultsMessage="No se encontraron cursos con ese nombre."
                 />
               </div>
-         
+
 
             <Modal isOpen={showAddCourseForm} onClose={() => setShowAddCourseForm(false)} className="max-w-2xl m-4">
               <div className="no-scrollbar relative w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-8">
