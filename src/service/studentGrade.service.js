@@ -159,7 +159,7 @@ export const studentGradeApi = {
     if (normalizedStudentId <= 0) return [];
     
     return requestWithFallback(async (endpoint) => {
-      const response = await api.get(`${endpoint}/${normalizedStudentId}`);
+      const response = await api.get(`${endpoint}?studentId=${normalizedStudentId}`);
       
       // Si es un array directo, normalizar cada elemento
       if (Array.isArray(response)) {
